@@ -1,59 +1,13 @@
-import sqlite3
 from typing import List
 from fastapi import FastAPI, HTTPException, Request, status
-from pydantic import BaseModel, EmailStr
+
+from database import get_db_connection, init_db
+from schemas import UserCreate, UserResponse, UserUpdate
 
 app = FastAPI(title="User Management API")
 
-DB_FILE = "users.db"
-
-
-# --- DATABASE HELPERS ---
-
-
-def get_db_connection():
-    """Helper function to obtain a database connection with Row factory."""
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row  # Returns output as key-dict
-    return conn
-
-
-def init_db():
-    """Create the users table if it doesn't already exist."""
-    with get_db_connection() as conn:  #with acting as a context manager ,manages the connection of database 
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL UNIQUE
-            )
-            """
-        )
-
-
 # Initialize SQLite table on app startup
 init_db()
-
-
-# --- PYDANTIC SCHEMAS ---
-
-
-class UserCreate(BaseModel):
-    id: int
-    email: EmailStr
-    name: str
-
-
-class UserUpdate(BaseModel):
-    name: str
-    email: EmailStr
-
-
-class UserResponse(BaseModel):
-    id: int
-    email: EmailStr
-    name: str
 
 
 # --- ROUTES ---
@@ -89,14 +43,6 @@ def create_user(user: UserCreate):
     with get_db_connection() as conn:
         cursor = conn.cursor()
 
-        # Check for existing ID
-        cursor.execute("SELECT id FROM users WHERE id = ?", (user.id,))
-        if cursor.fetchone():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"User with ID '{user.id}' already exists",
-            )
-
         # Check for existing Email
         cursor.execute("SELECT email FROM users WHERE email = ?", (user.email,))
         if cursor.fetchone():
@@ -106,11 +52,12 @@ def create_user(user: UserCreate):
             )
 
         cursor.execute(
-            "INSERT INTO users (id, name, email) VALUES (?, ?, ?)",
-            (user.id, user.name, user.email),
+            "INSERT INTO users (name, email) VALUES (?, ?)",
+            (user.name, user.email),
         )
+        user_id = cursor.lastrowid
 
-    return user.model_dump()
+    return {"id": user_id, "name": user.name, "email": user.email}
 
 
 # 2. READ ALL (GET)
