@@ -3,10 +3,6 @@ uvicorn[standard]>=0.28.0
 pydantic>=2.6.0
 email-validator>=2.1.0
 psycopg2-binary>=2.9.9
-fastapi
-uvicorn
-psycopg2-binary
-sqlalchemy
-pydantic
-python-jose
-bcrypt
+sqlalchemy>=2.0.0
+python-jose>=3.3.0
+bcrypt==4.0.1
