@@ -10,6 +10,8 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db_connection():
     """Helper function to obtain a PostgreSQL database connection with RealDictCursor."""
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL environment variable is missing. Please set it in Vercel Project Settings.")
     conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     return conn
 
