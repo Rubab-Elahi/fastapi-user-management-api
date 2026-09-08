@@ -9,9 +9,10 @@ from fastapi.responses import HTMLResponse
 app = FastAPI(title="User Management API")
 
 # Allow Streamlit frontend to make requests
+# Allow local development and Streamlit Cloud production domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_origins=["*"],  # Allows requests from any origin, including Streamlit Cloud
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
